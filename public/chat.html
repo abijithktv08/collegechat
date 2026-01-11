@@ -1,0 +1,106 @@
+<!-- ============================================ -->
+<!-- FILE 11: public/chat.html -->
+<!-- Location: college-chat/public/chat.html -->
+<!-- Main chat interface -->
+<!-- ============================================ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Chat - Rooms</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="chat-page">
+  <div class="chat-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="user-info">
+          <span class="user-avatar" id="userAvatar">🦊</span>
+          <div>
+            <div class="user-nickname" id="userNickname">CoolFox42</div>
+            <div class="user-details" id="userDetails">2nd Year • ENTC B</div>
+          </div>
+        </div>
+        <button onclick="logout()" class="btn-icon" title="Logout">🚪</button>
+      </div>
+
+      <div class="rooms-section">
+        <h3 class="rooms-title">Chat Rooms</h3>
+        
+        <div class="room-card" onclick="joinRoom('general')">
+          <div class="room-icon">💬</div>
+          <div class="room-info">
+            <div class="room-name">General Chat</div>
+            <div class="room-desc">Talk about anything!</div>
+          </div>
+          <div class="room-count" id="generalCount">0</div>
+        </div>
+
+        <div class="room-card" onclick="joinRoom('confession')">
+          <div class="room-icon">🤫</div>
+          <div class="room-info">
+            <div class="room-name">Confessions</div>
+            <div class="room-desc">Share your secrets</div>
+          </div>
+          <div class="room-count" id="confessionCount">0</div>
+        </div>
+
+        <div class="room-card" onclick="joinRoom('rant')">
+          <div class="room-icon">😤</div>
+          <div class="room-info">
+            <div class="room-name">Rant Room</div>
+            <div class="room-desc">Let it all out!</div>
+          </div>
+          <div class="room-count" id="rantCount">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+      <!-- Welcome Screen -->
+      <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-icon">👋</div>
+        <h2>Welcome to College Chat!</h2>
+        <p>Select a room from the sidebar to start chatting</p>
+      </div>
+
+      <!-- Active Chat -->
+      <div id="activeChat" class="active-chat" style="display: none;">
+        <div class="chat-header">
+          <div class="chat-room-info">
+            <div class="chat-room-icon" id="chatRoomIcon">💬</div>
+            <div>
+              <div class="chat-room-name" id="chatRoomName">General Chat</div>
+              <div class="chat-room-users" id="chatRoomUsers">2nd Year • ENTC B</div>
+            </div>
+          </div>
+          <button onclick="leaveRoom()" class="btn-icon">✖️</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <!-- Messages appear here -->
+        </div>
+
+        <div class="chat-input-area">
+          <input 
+            type="text" 
+            id="messageInput" 
+            placeholder="Type your message..." 
+            maxlength="1000"
+            onkeypress="handleKeyPress(event)"
+          >
+          <button onclick="sendMessage()" class="btn-send">
+            Send 📤
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>

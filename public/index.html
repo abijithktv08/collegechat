@@ -1,0 +1,120 @@
+<!-- ============================================ -->
+<!-- FILE 10: public/index.html -->
+<!-- Location: college-chat/public/index.html -->
+<!-- Login page with OTP -->
+<!-- ============================================ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Chat - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo">
+        <div class="logo-icon">💬</div>
+        <h1>College Chat</h1>
+        <p class="tagline">Anonymous. Safe. Fun.</p>
+      </div>
+
+      <!-- Step 1: Phone Number -->
+      <div id="phoneStep" class="step active">
+        <h2>Enter Phone Number</h2>
+        <p class="step-desc">We'll send you a verification code</p>
+        
+        <div class="input-group">
+          <span class="input-prefix">+91</span>
+          <input 
+            type="tel" 
+            id="phoneInput" 
+            placeholder="9876543210" 
+            maxlength="10"
+            pattern="[0-9]{10}"
+          >
+        </div>
+        
+        <button onclick="sendOTP()" class="btn btn-primary">
+          Send OTP 📱
+        </button>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div id="otpStep" class="step">
+        <h2>Enter OTP</h2>
+        <p class="step-desc">Check your phone for the code</p>
+        
+        <div class="otp-display" id="otpDisplay"></div>
+        
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="otpInput" 
+            placeholder="Enter 6-digit OTP" 
+            maxlength="6"
+            pattern="[0-9]{6}"
+          >
+        </div>
+        
+        <button onclick="verifyOTP()" class="btn btn-primary">
+          Verify & Continue ✓
+        </button>
+        <button onclick="backToPhone()" class="btn btn-secondary">
+          Back
+        </button>
+      </div>
+
+      <!-- Step 3: Select Year/Branch -->
+      <div id="detailsStep" class="step">
+        <h2>Select Your Details</h2>
+        <p class="step-desc">Choose your year and branch</p>
+        
+        <div class="select-group">
+          <label>Year</label>
+          <select id="yearSelect">
+            <option value="">Choose Year</option>
+            <option value="2nd">2nd Year</option>
+            <!-- Add more years here when needed -->
+            <!-- <option value="1st">1st Year</option> -->
+            <!-- <option value="3rd">3rd Year</option> -->
+            <!-- <option value="4th">4th Year</option> -->
+          </select>
+        </div>
+        
+        <div class="select-group">
+          <label>Branch</label>
+          <select id="branchSelect">
+            <option value="">Choose Branch</option>
+            <option value="ENTC">ENTC (Electronics & Telecom)</option>
+            <!-- Add more branches here when needed -->
+            <!-- <option value="Computer">Computer Engineering</option> -->
+            <!-- <option value="Mechanical">Mechanical Engineering</option> -->
+          </select>
+        </div>
+        
+        <div class="select-group">
+          <label>Division</label>
+          <select id="divisionSelect">
+            <option value="">Choose Division</option>
+            <option value="B">B Division</option>
+            <!-- Add more divisions here when needed -->
+            <!-- <option value="A">A Division</option> -->
+            <!-- <option value="C">C Division</option> -->
+          </select>
+        </div>
+        
+        <button onclick="completeLogin()" class="btn btn-primary">
+          Start Chatting 🚀
+        </button>
+      </div>
+
+      <div id="errorMessage" class="error-message"></div>
+      <div id="successMessage" class="success-message"></div>
+    </div>
+  </div>
+
+  <script src="js/login.js"></script>
+</body>
+</html>
