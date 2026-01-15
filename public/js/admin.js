@@ -1,10 +1,8 @@
-// ============================================
-// FILE 16: public/js/admin.js
-// Location: college-chat/public/js/admin.js
-// Admin dashboard logic
-// ============================================
+const API_URL = window.location.origin;
 
 let adminPassword = '';
+
+fetch(`${API_URL}/api/admin/stats`, {...})
 
 // Admin login
 function adminLogin() {
@@ -317,4 +315,5 @@ async function clearOldMessages(days) {
   } catch (error) {
     alert('Error: ' + error.message);
   }
+
 }
