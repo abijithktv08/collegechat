@@ -1,4 +1,4 @@
-// Check if user is logged in
+// Check if user is logged in how are you
 const API_URL = window.location.origin;
 const userData = JSON.parse(localStorage.getItem('user') || 'null');
 if (!userData) {
