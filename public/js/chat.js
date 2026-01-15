@@ -16,7 +16,12 @@ document.getElementById('userNickname').textContent = userData.nickname;
 document.getElementById('userDetails').textContent = `${userData.year} Year • ${userData.branch} ${userData.division}`;
 
 // Socket.IO connection
-const socket = io();
+const socket = io(window.location.origin, {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 5
+});
 
 let currentRoom = null;
 let currentRoomType = null;
@@ -228,4 +233,5 @@ socket.on('connect', () => {
 
 socket.on('disconnect', () => {
   console.log('❌ Socket disconnected');
+
 });
