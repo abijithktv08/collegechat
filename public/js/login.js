@@ -1,18 +1,20 @@
 // ============================================
-// FILE: public/js/login.js
-// Location: college-chat/public/js/login.js
-// Login page logic - OTP and authentication
+// FILE: public/js/login.js - FIXED FOR DEPLOYMENT
 // ============================================
 
 let currentOTP = '';
 let currentPhone = '';
+
+// Auto-detect API URL (works locally AND deployed)
+const API_URL = window.location.origin;
+
+console.log('🌐 Using API URL:', API_URL);
 
 // Send OTP to phone number
 async function sendOTP() {
   const phoneInput = document.getElementById('phoneInput');
   const phone = phoneInput.value.trim();
   
-  // Validate phone number
   if (phone.length !== 10 || !/^[0-9]+$/.test(phone)) {
     showError('Please enter a valid 10-digit phone number');
     return;
@@ -20,39 +22,43 @@ async function sendOTP() {
   
   try {
     console.log('Sending OTP to:', phone);
+    console.log('API endpoint:', `${API_URL}/api/otp/send`);
     
-    const response = await fetch('http://localhost:3000/api/otp/send', {
+    const response = await fetch(`${API_URL}/api/otp/send`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({ phoneNumber: phone })
     });
     
     console.log('Response status:', response.status);
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
     console.log('Response data:', data);
     
     if (data.success) {
       currentPhone = phone;
-      currentOTP = data.otp; // In production, this won't be sent
+      currentOTP = data.otp;
       
-      // Show OTP on screen (for testing - remove in production)
+      // Show OTP on screen (for testing)
       document.getElementById('otpDisplay').textContent = `Your OTP: ${data.otp}`;
       
-      // Move to OTP step
       showStep('otpStep');
       showSuccess('OTP sent successfully! Check your phone.');
       
-      // In production, you won't show OTP
-      console.log('OTP sent to', phone, ':', data.otp);
+      console.log('✅ OTP sent to', phone, ':', data.otp);
     } else {
       showError(data.message || 'Failed to send OTP');
     }
   } catch (error) {
-    console.error('Network error:', error);
-    showError('Network error. Make sure server is running on http://localhost:3000');
+    console.error('❌ Network error:', error);
+    showError(`Cannot connect to server: ${error.message}`);
   }
 }
 
@@ -71,7 +77,6 @@ async function verifyOTP() {
     return;
   }
   
-  // Move to details step
   showStep('detailsStep');
   showSuccess('OTP verified! Please select your details.');
 }
@@ -89,11 +94,13 @@ async function completeLogin() {
   
   try {
     console.log('Completing login...');
+    console.log('API endpoint:', `${API_URL}/api/otp/verify`);
     
-    const response = await fetch('http://localhost:3000/api/otp/verify', {
+    const response = await fetch(`${API_URL}/api/otp/verify`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         phoneNumber: currentPhone,
@@ -106,14 +113,16 @@ async function completeLogin() {
     
     console.log('Verify response status:', response.status);
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
     console.log('Verify response data:', data);
     
     if (data.success) {
-      // Store user data
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Redirect to chat
       showSuccess('Login successful! Redirecting...');
       setTimeout(() => {
         window.location.href = '/chat';
@@ -122,8 +131,8 @@ async function completeLogin() {
       showError(data.message || 'Login failed');
     }
   } catch (error) {
-    console.error('Network error:', error);
-    showError('Network error. Make sure server is running and MongoDB is connected.');
+    console.error('❌ Network error:', error);
+    showError(`Network error: ${error.message}`);
   }
 }
 
@@ -158,16 +167,20 @@ function showSuccess(message) {
   }, 3000);
 }
 
-// Check if server is running on page load
+// Check server connection on page load
 window.addEventListener('load', async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/test');
+    console.log('🔄 Testing server connection...');
+    console.log('API URL:', API_URL);
+    
+    const response = await fetch(`${API_URL}/api/test`);
     const data = await response.json();
+    
     if (data.success) {
       console.log('✅ Server connected successfully');
     }
   } catch (error) {
-    console.error('❌ Cannot connect to server. Make sure to run: npm run dev');
-    showError('Cannot connect to server. Please start the server first!');
+    console.error('❌ Cannot connect to server:', error);
+    showError('Warning: Cannot verify server connection. Try logging in anyway.');
   }
 });
