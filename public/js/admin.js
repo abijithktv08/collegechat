@@ -1,9 +1,5 @@
-const API_URL = window.location.origin;
-
 let adminPassword = '';
-
-fetch(`${API_URL}/api/admin/stats`, {...})
-
+const API_URL = window.location.origin;
 // Admin login
 function adminLogin() {
   const passwordInput = document.getElementById('adminPassword');
@@ -27,7 +23,7 @@ function handleAdminKeyPress(event) {
 // Fetch stats
 async function fetchStats() {
   try {
-    const response = await fetch('/api/admin/stats', {
+    const response = await fetch(`${API_URL}/api/admin/stats`, {
       headers: { 'password': adminPassword }
     });
     
@@ -315,5 +311,4 @@ async function clearOldMessages(days) {
   } catch (error) {
     alert('Error: ' + error.message);
   }
-
 }
