@@ -1,9 +1,3 @@
-// ============================================
-// FILE: server/socketHandler.js
-// Location: college-chat/server/socketHandler.js
-// Handles real-time chat - AVATAR FIX
-// ============================================
-
 const Message = require('./models/Message');
 const User = require('./models/User');
 
@@ -17,12 +11,13 @@ function setupSocketHandlers(io) {
         const { userId, room, year, branch, division, roomType } = data;
         
         socket.join(room);
+        socket.userId = userId;
+        socket.currentRoom = room;
+        
         console.log(`User ${userId} joined room: ${room}`);
         
-        // Update user online status
         await User.findByIdAndUpdate(userId, { isOnline: true });
         
-        // Load recent messages (last 50)
         const messages = await Message.find({ room })
           .sort({ timestamp: -1 })
           .limit(50)
@@ -30,20 +25,18 @@ function setupSocketHandlers(io) {
         
         console.log(`Loading ${messages.length} messages for room ${room}`);
         
-        // FIX: Make sure all messages have avatar and nickname
         const formattedMessages = messages.reverse().map(msg => ({
-          id: msg._id,
+          id: msg._id.toString(),
+          userId: msg.userId.toString(),
           nickname: msg.senderNickname || 'Anonymous',
           avatar: msg.senderAvatar || '👤',
           message: msg.message,
           timestamp: msg.timestamp,
-          senderNickname: msg.senderNickname || 'Anonymous',
-          senderAvatar: msg.senderAvatar || '👤'
+          senderPhone: msg.senderPhone
         }));
         
         socket.emit('load-messages', formattedMessages);
         
-        // Notify room
         io.to(room).emit('user-joined', {
           message: 'Someone joined the chat! 🎉'
         });
@@ -60,7 +53,6 @@ function setupSocketHandlers(io) {
         
         console.log(`Message from user ${userId} in room ${room}`);
         
-        // Get user details
         const user = await User.findById(userId);
         
         if (!user) {
@@ -71,7 +63,6 @@ function setupSocketHandlers(io) {
         
         console.log(`User found: ${user.nickname} (${user.avatar})`);
         
-        // Save message to database
         const newMessage = new Message({
           userId: user._id,
           senderPhone: user.phoneNumber,
@@ -89,13 +80,14 @@ function setupSocketHandlers(io) {
         await newMessage.save();
         console.log('Message saved to database');
         
-        // Broadcast to room - FIXED: Always include avatar and nickname
         const messageToSend = {
-          id: newMessage._id,
+          id: newMessage._id.toString(),
+          userId: user._id.toString(),
           nickname: user.nickname,
           avatar: user.avatar,
           message: message,
-          timestamp: newMessage.timestamp
+          timestamp: newMessage.timestamp,
+          senderPhone: user.phoneNumber
         };
         
         console.log('Broadcasting message:', messageToSend);
@@ -104,6 +96,44 @@ function setupSocketHandlers(io) {
       } catch (error) {
         console.error('Message error:', error);
         socket.emit('error', { message: 'Failed to send message: ' + error.message });
+      }
+    });
+    
+    // DELETE MESSAGE - Only message owner can delete
+    socket.on('delete-message', async (data) => {
+      try {
+        const { messageId, userId, room } = data;
+        
+        console.log(`Delete request: messageId=${messageId}, userId=${userId}`);
+        
+        // Find the message
+        const message = await Message.findById(messageId);
+        
+        if (!message) {
+          socket.emit('error', { message: 'Message not found' });
+          return;
+        }
+        
+        // Check if user owns this message
+        if (message.userId.toString() !== userId) {
+          socket.emit('error', { message: 'You can only delete your own messages' });
+          return;
+        }
+        
+        // Delete from database
+        await Message.findByIdAndDelete(messageId);
+        console.log('Message deleted from database');
+        
+        // Notify everyone in the room to remove message
+        io.to(room).emit('message-deleted', {
+          messageId: messageId
+        });
+        
+        console.log('Broadcasted message deletion to room:', room);
+        
+      } catch (error) {
+        console.error('Delete message error:', error);
+        socket.emit('error', { message: 'Failed to delete message: ' + error.message });
       }
     });
     
@@ -125,6 +155,10 @@ function setupSocketHandlers(io) {
     // User disconnects
     socket.on('disconnect', async () => {
       console.log('❌ User disconnected:', socket.id);
+      
+      if (socket.userId) {
+        await User.findByIdAndUpdate(socket.userId, { isOnline: false });
+      }
     });
   });
 }

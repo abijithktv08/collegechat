@@ -1,9 +1,3 @@
-/* ============================================
-   FILE 13: public/css/style.css
-   Location: college-chat/public/css/style.css
-   Cartoonish, colorful design (NO PINK!)
-   ============================================ */
-
 * {
   margin: 0;
   padding: 0;
@@ -781,4 +775,29 @@ body {
 .btn-danger:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+}
+.message-delete-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.2s;
+}
+
+.message:hover .message-delete-btn {
+  opacity: 1;
+}
+
+.message-delete-btn:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
+}
+
+/* Message deletion animation */
+.message.deleting {
+  opacity: 0.5;
+  pointer-events: none;
 }
