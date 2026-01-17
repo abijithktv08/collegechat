@@ -16,6 +16,9 @@ const socket = io(window.location.origin, {
 
 let currentRoom = null;
 let currentRoomType = null;
+let typingTimeout = null;
+let isTyping = false;
+const typingUsers = new Set();
 
 const roomIcons = {
   general: '💬',
@@ -52,6 +55,9 @@ function joinRoom(roomType) {
   document.getElementById('chatRoomUsers').textContent = `${userData.year} Year • ${userData.branch} ${userData.division}`;
   
   document.getElementById('chatMessages').innerHTML = '';
+  
+  typingUsers.clear();
+  updateTypingIndicator();
 }
 
 function getRoomName(roomType) {
@@ -73,6 +79,7 @@ function leaveRoom() {
   
   currentRoom = null;
   currentRoomType = null;
+  typingUsers.clear();
   
   document.getElementById('welcomeScreen').style.display = 'flex';
   document.getElementById('activeChat').style.display = 'none';
@@ -84,6 +91,11 @@ function sendMessage() {
   const message = messageInput.value.trim();
   
   if (!message || !currentRoom) return;
+  
+  if (isTyping) {
+    socket.emit('typing-stop', { room: currentRoom });
+    isTyping = false;
+  }
   
   socket.emit('send-message', {
     userId: userData.id,
@@ -104,7 +116,35 @@ function handleKeyPress(event) {
   }
 }
 
-// DELETE MESSAGE FUNCTION
+function handleTyping() {
+  if (!currentRoom) return;
+  
+  if (!isTyping) {
+    socket.emit('typing-start', { 
+      room: currentRoom,
+      nickname: userData.nickname,
+      avatar: userData.avatar
+    });
+    isTyping = true;
+  }
+  
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
+  
+  typingTimeout = setTimeout(() => {
+    socket.emit('typing-stop', { room: currentRoom });
+    isTyping = false;
+  }, 2000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const messageInput = document.getElementById('messageInput');
+  if (messageInput) {
+    messageInput.addEventListener('input', handleTyping);
+  }
+});
+
 function deleteMessage(messageId) {
   if (confirm('Delete this message for everyone?')) {
     console.log('Deleting message:', messageId);
@@ -117,7 +157,6 @@ function deleteMessage(messageId) {
   }
 }
 
-// Socket event listeners
 socket.on('load-messages', (messages) => {
   const messagesDiv = document.getElementById('chatMessages');
   messagesDiv.innerHTML = '';
@@ -137,7 +176,6 @@ socket.on('new-message', (message) => {
   scrollToBottom();
 });
 
-// Listen for message deletion
 socket.on('message-deleted', (data) => {
   console.log('Message deleted:', data.messageId);
   
@@ -151,6 +189,74 @@ socket.on('message-deleted', (data) => {
   }
 });
 
+socket.on('online-count-update', (data) => {
+  console.log('Online count updated:', data.count);
+  updateOnlineCount(data.count);
+});
+
+socket.on('user-typing', (data) => {
+  console.log('User typing:', data.nickname);
+  typingUsers.add(JSON.stringify(data));
+  updateTypingIndicator();
+});
+
+socket.on('user-stopped-typing', (data) => {
+  console.log('User stopped typing');
+  for (let user of typingUsers) {
+    const userData = JSON.parse(user);
+    if (userData.socketId === data.socketId) {
+      typingUsers.delete(user);
+      break;
+    }
+  }
+  updateTypingIndicator();
+});
+
+function updateOnlineCount(count) {
+  const roomUsersElement = document.getElementById('chatRoomUsers');
+  if (roomUsersElement) {
+    const baseText = `${userData.year} Year • ${userData.branch} ${userData.division}`;
+    roomUsersElement.textContent = `${baseText} • ${count} online`;
+  }
+}
+
+function updateTypingIndicator() {
+  const typingIndicatorDiv = document.getElementById('typingIndicator');
+  
+  if (typingUsers.size === 0) {
+    typingIndicatorDiv.style.display = 'none';
+    return;
+  }
+  
+  typingIndicatorDiv.style.display = 'flex';
+  
+  const typingArray = Array.from(typingUsers).map(u => JSON.parse(u));
+  
+  if (typingArray.length === 1) {
+    typingIndicatorDiv.innerHTML = `
+      <span class="typing-avatar">${typingArray[0].avatar}</span>
+      <span class="typing-text">${typingArray[0].nickname} is typing</span>
+      <span class="typing-dots">
+        <span>.</span><span>.</span><span>.</span>
+      </span>
+    `;
+  } else if (typingArray.length === 2) {
+    typingIndicatorDiv.innerHTML = `
+      <span class="typing-text">${typingArray[0].nickname} and ${typingArray[1].nickname} are typing</span>
+      <span class="typing-dots">
+        <span>.</span><span>.</span><span>.</span>
+      </span>
+    `;
+  } else {
+    typingIndicatorDiv.innerHTML = `
+      <span class="typing-text">Several people are typing</span>
+      <span class="typing-dots">
+        <span>.</span><span>.</span><span>.</span>
+      </span>
+    `;
+  }
+}
+
 socket.on('user-joined', (data) => {
   addSystemMessage(data.message);
 });
@@ -163,7 +269,6 @@ socket.on('error', (data) => {
   alert('Error: ' + data.message);
 });
 
-// Add message to UI with DELETE button
 function addMessageToUI(message) {
   const messagesDiv = document.getElementById('chatMessages');
   
@@ -180,7 +285,6 @@ function addMessageToUI(message) {
   const nickname = message.nickname || 'Anonymous';
   const messageText = message.message || '';
   
-  // Check if this message belongs to current user
   const isOwnMessage = message.userId === userData.id;
   
   messageDiv.innerHTML = `
