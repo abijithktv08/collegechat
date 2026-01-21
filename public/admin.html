@@ -140,4 +140,43 @@
     Clear 7+ Days Old
   </button>
 </div>
+<!-- Add to tabs section -->
+<button class="tab-btn" onclick="showTab('feedback')">📝 Feedback</button>
+
+<!-- Add this tab content -->
+<div id="feedbackTab" class="tab-content">
+  <h2>User Feedback</h2>
+  
+  <div style="display:flex; gap:15px; margin-bottom:20px;">
+    <div style="flex:1; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:20px; border-radius:12px; text-align:center;">
+      <div style="font-size:32px; font-weight:700;" id="totalFeedback">0</div>
+      <div style="font-size:14px; opacity:0.9;">Total</div>
+    </div>
+    <div style="flex:1; background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; padding:20px; border-radius:12px; text-align:center;">
+      <div style="font-size:32px; font-weight:700;" id="newFeedback">0</div>
+      <div style="font-size:14px; opacity:0.9;">New</div>
+    </div>
+    <div style="flex:1; background:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; padding:20px; border-radius:12px; text-align:center;">
+      <div style="font-size:32px; font-weight:700;" id="resolvedFeedback">0</div>
+      <div style="font-size:14px; opacity:0.9;">Resolved</div>
+    </div>
+  </div>
+  
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>User</th>
+        <th>Phone</th>
+        <th>Type</th>
+        <th>Feedback</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="feedbackTable">
+      <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
 </html>

@@ -227,10 +227,21 @@ function showTab(tabName) {
   });
   
   // Show selected tab
-  document.getElementById(tabName + 'Tab').classList.add('active');
+  const selectedTab = document.getElementById(tabName + 'Tab');
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+  }
   
   // Activate button
-  event.target.classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
+  
+  // Load feedback when feedback tab is clicked
+  if (tabName === 'feedback') {
+    console.log('Feedback tab clicked, loading...');
+    loadFeedback();
+  }
 }
 
 // Refresh data
@@ -310,5 +321,132 @@ async function clearOldMessages(days) {
     }
   } catch (error) {
     alert('Error: ' + error.message);
+  }
+}
+async function loadFeedback() {
+  console.log('🔄 Loading feedback...');
+  
+  if (!adminPassword) {
+    console.error('❌ Not logged in');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${window.location.origin}/api/feedback/all`, {
+      headers: { 'password': adminPassword }
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.error('Failed:', data.message);
+      const tbody = document.getElementById('feedbackTable');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:red;">Error: ${data.message}</td></tr>`;
+      }
+      return;
+    }
+    
+    const feedbacks = data.feedbacks || [];
+    const tbody = document.getElementById('feedbackTable');
+    
+    if (!tbody) {
+      console.error('❌ feedbackTable not found');
+      return;
+    }
+    
+    // Update stats
+    document.getElementById('totalFeedback').textContent = feedbacks.length;
+    document.getElementById('newFeedback').textContent = feedbacks.filter(f => f.status === 'new').length;
+    document.getElementById('resolvedFeedback').textContent = feedbacks.filter(f => f.status === 'resolved').length;
+    
+    tbody.innerHTML = '';
+    
+    if (feedbacks.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No feedback yet</td></tr>';
+      return;
+    }
+    
+    feedbacks.forEach(f => {
+      const date = new Date(f.createdAt).toLocaleString();
+      const icons = { bug: '🐛', feature: '✨', improvement: '📈', other: '💭' };
+      const statusColors = { new: '#ff9800', reviewed: '#2196f3', resolved: '#4caf50' };
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="white-space:nowrap;">${date}</td>
+        <td>${f.userAvatar || '👤'} ${f.userNickname || 'Anonymous'}</td>
+        <td><strong>${f.userPhone || 'N/A'}</strong></td>
+        <td>${icons[f.feedbackType]} ${f.feedbackType}</td>
+        <td style="max-width:300px;">${f.message}</td>
+        <td>
+          <span style="color:${statusColors[f.status]}; font-weight:600;">
+            ${f.status.toUpperCase()}
+          </span>
+        </td>
+        <td>
+          <select id="status-${f._id}" onchange="handleStatusChange('${f._id}')" style="padding:5px; border-radius:5px; border:1px solid #ddd;">
+            <option value="new" ${f.status === 'new' ? 'selected' : ''}>New</option>
+            <option value="reviewed" ${f.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+            <option value="resolved" ${f.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    
+    console.log('✅ Loaded', feedbacks.length, 'feedbacks');
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    const tbody = document.getElementById('feedbackTable');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:red;">Error loading</td></tr>`;
+    }
+  }
+}
+
+function handleStatusChange(feedbackId) {
+  const selectElement = document.getElementById(`status-${feedbackId}`);
+  if (!selectElement) {
+    console.error('Select element not found');
+    return;
+  }
+  
+  const newStatus = selectElement.value;
+  console.log('Changing status to:', newStatus);
+  
+  updateFeedbackStatus(feedbackId, newStatus);
+}
+
+async function updateFeedbackStatus(id, status) {
+  console.log('Updating feedback:', id, 'to', status);
+  
+  if (!adminPassword) {
+    alert('❌ Please login first!');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${window.location.origin}/api/feedback/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'password': adminPassword,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('✅ Status updated to: ' + status.toUpperCase());
+      loadFeedback();
+    } else {
+      alert('❌ Failed: ' + data.message);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('❌ Network error');
   }
 }

@@ -6,6 +6,8 @@
 
 console.log('🚀 Starting server...');
 console.log('📁 Current directory:', __dirname);
+const feedbackRouter = require('./routes/feedback');
+
 
 // Load environment variables
 require('dotenv').config();
@@ -70,6 +72,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/api/feedback', feedbackRouter);
+
 console.log('✅ Middleware configured');
 
 // Connect to database

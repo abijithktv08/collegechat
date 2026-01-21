@@ -340,3 +340,100 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
   console.log('❌ Socket disconnected');
 });
+let currentFeedbackType = 'bug';
+
+// Open feedback modal
+function openFeedback() {
+  document.getElementById('feedbackModal').style.display = 'flex';
+  document.getElementById('feedbackText').value = '';
+  document.getElementById('charCount').textContent = '0';
+  currentFeedbackType = 'bug';
+  
+  document.querySelectorAll('.feedback-type-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector('[data-type="bug"]').classList.add('active');
+}
+
+// Close feedback modal
+function closeFeedback() {
+  document.getElementById('feedbackModal').style.display = 'none';
+}
+
+// Close if clicking outside
+function closeFeedbackIfOutside(event) {
+  if (event.target.id === 'feedbackModal') {
+    closeFeedback();
+  }
+}
+
+// Select feedback type
+function selectType(type) {
+  currentFeedbackType = type;
+  
+  document.querySelectorAll('.feedback-type-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  const selectedBtn = document.querySelector(`[data-type="${type}"]`);
+  if (selectedBtn) {
+    selectedBtn.classList.add('active');
+  }
+}
+
+// Send feedback
+async function sendFeedback() {
+  const text = document.getElementById('feedbackText').value.trim();
+  
+  if (!text) {
+    alert('Please write your feedback!');
+    return;
+  }
+  
+  if (text.length < 5) {
+    alert('Please write at least 5 characters.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/feedback/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userData ? userData.id : null,
+        feedbackType: currentFeedbackType,
+        message: text
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('✅ Thank you for your feedback!');
+      closeFeedback();
+    } else {
+      alert('❌ Failed to send. Please try again.');
+    }
+  } catch (error) {
+    console.error('Feedback error:', error);
+    alert('❌ Network error. Please try again.');
+  }
+}
+
+// Character counter
+document.addEventListener('DOMContentLoaded', () => {
+  const textarea = document.getElementById('feedbackText');
+  if (textarea) {
+    textarea.addEventListener('input', (e) => {
+      const count = e.target.value.length;
+      document.getElementById('charCount').textContent = count;
+      
+      if (count > 500) {
+        e.target.value = e.target.value.substring(0, 500);
+        document.getElementById('charCount').textContent = '500';
+      }
+    });
+  }
+});

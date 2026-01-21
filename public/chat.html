@@ -106,5 +106,60 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/chat.js"></script>
+  <!-- Feedback Button -->
+<div class="feedback-float-btn" onclick="openFeedback()">
+  💬
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="feedback-overlay" style="display:none;" onclick="closeFeedbackIfOutside(event)">
+  <div class="feedback-box">
+    <div class="feedback-box-header">
+      <h3>💬 Send Feedback</h3>
+      <button onclick="closeFeedback()" class="feedback-close-btn">✖</button>
+    </div>
+    
+    <div class="feedback-box-body">
+      <p style="color:#666; margin-bottom:15px; font-size:14px;">
+        Help us improve! Share bugs, suggestions, or ideas.
+      </p>
+      
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:8px; font-weight:600;">Type:</label>
+        <div class="feedback-type-buttons">
+          <button class="feedback-type-btn active" data-type="bug" onclick="selectType('bug')">
+            🐛 Bug
+          </button>
+          <button class="feedback-type-btn" data-type="feature" onclick="selectType('feature')">
+            ✨ Feature
+          </button>
+          <button class="feedback-type-btn" data-type="improvement" onclick="selectType('improvement')">
+            📈 Improve
+          </button>
+          <button class="feedback-type-btn" data-type="other" onclick="selectType('other')">
+            💭 Other
+          </button>
+        </div>
+      </div>
+      
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:8px; font-weight:600;">Your Feedback:</label>
+        <textarea 
+          id="feedbackText" 
+          placeholder="Tell us what you think..."
+          style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; font-family:inherit; min-height:100px; resize:vertical;"
+        ></textarea>
+        <div style="text-align:right; font-size:12px; color:#999; margin-top:5px;">
+          <span id="charCount">0</span>/500
+        </div>
+      </div>
+      
+      <button onclick="sendFeedback()" class="feedback-send-btn">
+        Send Feedback 📤
+       </button>
+     </div>
+    </div>
+  </div>
+
 </body>
 </html>
